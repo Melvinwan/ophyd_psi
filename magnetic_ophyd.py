@@ -2,7 +2,7 @@ import functools
 import threading
 import time
 from typing import List
-import logging
+from log_ophyd import log_ophyd
 
 import numpy as np
 from ophyd import Component as Cpt
@@ -14,7 +14,7 @@ from prettytable import PrettyTable
 from sockets import SocketIO, SocketSignal
 from controller import Controller, threadlocked
 
-logger = logging.getLogger('ophyd')
+logger = log_ophyd("mag_log.txt",__name__)
 
 class MagneticCommunicationError(Exception):
     pass
@@ -125,9 +125,11 @@ class MagneticController(Controller):
         return current
 
     def set_field(self, val) -> None:
+        logger.info("Field is set to "+str(val))
         self.socket_put("SET_FIELD +"+str(val)+"\n")
 
     def set_current(self, val) -> None:
+        logger.info("Current is set to "+str(val))
         self.socket_put("SET_CURRENT +"+str(val)+"\n")
 
     def get_field(self) -> str:
@@ -226,7 +228,7 @@ class MagneticField(MagneticSignalBase):
     @retry_once
     @threadlocked
     def _socket_set(self, val: float) -> None:
-        self.controller.set_field()
+        self.controller.set_field(val)
 
 class MagneticCurrent(MagneticSignalBase):
     def _socket_get(self) -> float:
@@ -235,7 +237,7 @@ class MagneticCurrent(MagneticSignalBase):
     @retry_once
     @threadlocked
     def _socket_set(self, val: float) -> None:
-        self.controller.set_current()
+        self.controller.set_current(val)
 
 class MagneticVoltage(MagneticSignalRO):
     @threadlocked
@@ -269,13 +271,14 @@ class MagneticWaterFlow(MagneticSignalRO):
 
 class Magnetic(Device):
     USER_ACCESS = ["controller"]
-    magnetic_current = Cpt(MagneticCurrent, signal_name = "Magnetic current")
-    magnetic_field = Cpt(MagneticField, signal_name = "Magnetic field")
-    magnetic_ADCDAC_temp = Cpt(MagneticADCDACTemp, signal_name = "Magnetic ADCDAC temp")
-    magnetic_box_temp = Cpt(MagneticBoxTemp, signal_name = "Magnetic box temp")
-    magnetic_rack_temp = Cpt(MagneticRackTemp, signal_name = "Magnetic rack temp")
-    magnetic_water_temp = Cpt(MagneticWaterTemp, signal_name = "Magnetic water temp")
-    magnetic_water_flow = Cpt(MagneticWaterFlow, signal_name = "Magnetic water flow")
+    magnetic_current = Cpt(MagneticCurrent, signal_name = "Magnetic current",kind="hinted")
+    magnetic_field = Cpt(MagneticField, signal_name = "Magnetic field",kind="hinted")
+    magnetic_voltage = Cpt(MagneticVoltage, signal_name = "Magnetic voltage",kind="hinted")
+    magnetic_ADCDAC_temp = Cpt(MagneticADCDACTemp, signal_name = "Magnetic ADCDAC temp",kind="hinted")
+    magnetic_box_temp = Cpt(MagneticBoxTemp, signal_name = "Magnetic box temp",kind="hinted")
+    magnetic_rack_temp = Cpt(MagneticRackTemp, signal_name = "Magnetic rack temp",kind="hinted")
+    magnetic_water_temp = Cpt(MagneticWaterTemp, signal_name = "Magnetic water temp",kind="hinted")
+    magnetic_water_flow = Cpt(MagneticWaterFlow, signal_name = "Magnetic water flow",kind="hinted")
 
     SUB_READBACK = "readback"
     SUB_CONNECTION_CHANGE = "connection_change"
@@ -283,7 +286,6 @@ class Magnetic(Device):
 
     def __init__(
         self,
-        axis_Id,
         prefix="",
         *,
         name,
@@ -299,7 +301,6 @@ class Magnetic(Device):
         limits=None,
         **kwargs,
     ):
-        self.axis_Id = axis_Id
         self.sign = sign
         self.controller = MagneticController(socket=socket_cls(host=host, port=port))
         self.controller.on()

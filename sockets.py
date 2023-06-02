@@ -4,16 +4,14 @@ import logging
 import socket
 import time
 import typing
+from log_ophyd import log_ophyd
+
 
 import numpy as np
-# from bec_utils import bec_logger
 from ophyd import Signal
 from ophyd.utils.errors import DisconnectedError
 
-# logger = bec_logger.logger
-# logger = bec_logger.logger("socket")
-
-
+logger = log_ophyd("sockets_log.txt",__name__)
 def raise_if_disconnected(fcn):
     """Decorator to catch attempted access to disconnected Galil channels."""
 
@@ -137,13 +135,11 @@ class SocketSignal(abc.ABC, Signal):
             use_complete = False
 
         self._socket_set(value)
-        old_value = self._parent.position
 
         timestamp = time.time()
         super().put(value, timestamp=timestamp, force=True)
         self._run_subs(
             sub_type=self.SUB_SETPOINT,
-            old_value=old_value,
             value=value,
             timestamp=timestamp,
         )
@@ -193,12 +189,12 @@ class SocketIO:
         self.sock.connect((self.host, self.port))
 
     def _put(self, msg_bytes):
-        # logger.debug(f"put message: {msg_bytes}")
+        logger.debug(f"put message: {msg_bytes}")
         return self.sock.send(msg_bytes)
 
     def _recv(self, buffer_length=1024):
         msg = self.sock.recv(buffer_length)
-        # logger.debug(f"recv message: {msg}")
+        logger.debug(f"recv message: {msg}")
         return msg
 
     def _initialize_socket(self):
