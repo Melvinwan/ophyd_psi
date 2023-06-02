@@ -17,12 +17,8 @@ from ophyd.status import wait as status_wait
 from ophyd.utils import LimitError, ReadOnlyError
 
 from ophyd.ophydobj import OphydObject
-from sockets import SocketIO, SocketSignal
-from controller import Controller, threadlocked
 
 # import asyncio
-import base64
-import sys
 from IPython.display import clear_output
 from toptica.lasersdk.client import Client, NetworkConnection, DeviceNotFoundError
 from toptica.lasersdk.client import UserLevel, Subscription, Timestamp, SubscriptionValue
@@ -431,6 +427,7 @@ class LaserToptica(Device):
     scan_offset = Cpt(LaserMainScanOffset, signal_name="scan_offset")
     scan_frequency =Cpt(LaserMainScanFrequency, signal_name="scan_frequency")
     ctl_wavelength_act = Cpt(LaserMainCtlWavelengthAct, signal_name="wavelength_act")
+    low_limit_wavelength = Cpt(Signal, value=1510, kind="omitted")
 
     def __init__(self, prefix,name, host, port=None, kind=None,configuration_attrs=None, parent=None,**kwargs):
         self.lasercontroller = LaserController(host=host,port=port)
@@ -444,6 +441,7 @@ class LaserToptica(Device):
             **kwargs,
         )
         self.name = name
+        self.tolerance = kwargs.pop("tolerance", 0.5)
         self.scan_end.kind = "hinted"
         self.scan_start.kind = "hinted"
         self.scan_offset.kind = "hinted"
@@ -456,6 +454,8 @@ class LaserToptica(Device):
     #     self.widescan_offset.put(val)
     # def update_widescan_time(self,val):
     #     self.widescan_time.put(val)
+    def limit_wavelength(self):
+        return self.low_limit_wavelength.get()
     def update_scan_end(self,val):
         self.scan_end.put(val)
     def update_scan_start(self,val):
