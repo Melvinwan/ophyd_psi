@@ -1,0 +1,10 @@
+chassis_ip = "192.168.1.2"  # Replace with the IP address of the NI chassis
+
+# Call DAQmxGetSysDevNames from the DAQmx C library
+DAQmxGetSysDevNames = ctypes.windll.nicaiu.DAQmxGetSysDevNames
+DAQmxGetSysDevNames.restype = ctypes.c_int32
+
+dev_names_buffer = ctypes.create_string_buffer(4096)  # Buffer to hold the device names
+DAQmxGetSysDevNames(dev_names_buffer, len(dev_names_buffer))
+
+dev_names = dev_names_buffer.value.decode().split(",")
