@@ -8,6 +8,7 @@ import logging
 from ophyd.log import config_ophyd_logging
 # config_ophyd_logging(file='/tmp/ophyd.log', level='DEBUG')
 from prettytable import PrettyTable
+from log_ophyd import log_ophyd
 
 import numpy as np
 # from bec_utils import BECMessage, MessageEndpoints, bec_logger
@@ -24,11 +25,7 @@ from toptica.lasersdk.client import Client, NetworkConnection, DeviceNotFoundErr
 from toptica.lasersdk.client import UserLevel, Subscription, Timestamp, SubscriptionValue
 from toptica.lasersdk.dlcpro.v2_0_3 import DLCpro, NetworkConnection, DeviceNotFoundError, DecopError, UserLevel
 
-CONNECTION = "129.129.98.110"
-
-# dlc = DLCpro(NetworkConnection(CONNECTION)).open()
-# print("{} is a {} with serial number {}.\n".format(dlc.system_model.get(),dlc.system_type.get(), dlc.serial_number.get()))
-
+logger = log_ophyd("laser_log.txt",__name__)
 
 DEFAULT_EPICSSIGNAL_VALUE = object()
 class LaserCommunicationError(Exception):
@@ -148,6 +145,7 @@ class LaserController(OphydObject): #On off laser similar to controller
     def _initialize(self):
         # self._connected = False
         print(f"connecting to {self.host}")
+        logger.info("The connection has already been established.")
         self.dlc = DLCpro(NetworkConnection(self.host))
         self.dlc.open()
         # self.name = "self.dlc.system_model.get()+self.dlc.system_type.get()+ self.dlc.serial_number.get()"
@@ -193,6 +191,7 @@ class LaserController(OphydObject): #On off laser similar to controller
 
     def off(self):
         """Close the connection to the laser"""
+        logger.info("The connection is already closed.")
         self.dlc.close()
         self.connected = False
 
@@ -227,36 +226,46 @@ class LaserController(OphydObject): #On off laser similar to controller
     #     return self.dlc.laser1.wide_scan.remaining_time.get()
 
     def scan_end(self):
+        logger.debug(f"recv scan end")
         return self.dlc.laser1.scan.end.get()
 
     # @scan_end.setter
     def scan_end_setter(self,val):
+        logger.debug(f"set scan end")
         self.dlc.laser1.scan.end.set(val)
     def scan_start(self):
+        logger.debug(f"recv scan start")
         return self.dlc.laser1.scan.start.get()
 
     # @scan_start.setter
     def scan_start_setter(self,val):
+        logger.debug(f"set scan start")
         self.dlc.laser1.scan.start.set(val)
     def scan_frequency(self):
+        logger.debug(f"recv scan frequency")
         return self.dlc.laser1.scan.frequency.get()
 
     # @scan_frequency.setter
     def scan_frequency_setter(self,val):
+        logger.debug(f"set scan frequency")
         self.dlc.laser1.scan.frequency.set(val)
 
     def scan_offset(self):
+        logger.debug(f"recv scan offset")
         return self.dlc.laser1.scan.offset.get()
 
     # @scan_offset.setter
     def scan_offset_setter(self,val):
+        logger.debug(f"set scan offset")
         self.dlc.laser1.scan.offset.set(val)
 
     def wavelength_act(self):
+        logger.debug(f"recv wavelength act")
         return self.dlc.laser1.ctl.wavelength_act.get()
 
     # @wavelength_act.setter
     def wavelength_act_setter(self,val):
+        logger.debug(f"set wavelength act")
         self.dlc.laser1.ctl.wavelength_set.set(val)
 
     def describe(self) -> None:
@@ -380,6 +389,7 @@ class LaserMainScanEnd(LaserSignalBase):
 
     # @threadlocked
     def _set(self, val):
+        logger.info("Main Scan end is set to "+str(val))
         self.dlc.scan_end_setter(val)
 
 class LaserMainScanStart(LaserSignalBase):
@@ -389,6 +399,7 @@ class LaserMainScanStart(LaserSignalBase):
 
     # @threadlocked
     def _set(self, val):
+        logger.info("Main Scan start is set to "+str(val))
         self.dlc.scan_start_setter(val)
 
 class LaserMainScanFrequency(LaserSignalBase):
@@ -398,6 +409,7 @@ class LaserMainScanFrequency(LaserSignalBase):
 
     # @threadlocked
     def _set(self, val):
+        logger.info("Main Scan frequency is set to "+str(val))
         self.dlc.scan_frequency_setter(val)
 
 class LaserMainScanOffset(LaserSignalBase):
@@ -406,6 +418,7 @@ class LaserMainScanOffset(LaserSignalBase):
         return self.dlc.scan_offset()
     # @threadlocked
     def _set(self, val):
+        logger.info("Main Scan offset is set to "+str(val))
         self.dlc.scan_offset_setter(val)
 
 class LaserMainCtlWavelengthAct(LaserSignalBase):
@@ -415,6 +428,7 @@ class LaserMainCtlWavelengthAct(LaserSignalBase):
         return self.dlc.wavelength_act()
     # @threadlocked
     def _set(self, val):
+        logger.info("Main ctl wavelength is set to "+str(val))
         self.dlc.wavelength_act_setter(val)
 
 
