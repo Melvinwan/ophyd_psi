@@ -112,10 +112,6 @@ def data_type(val):
 
 class ITCController(OphydObject): #On off laser similar to controller
     _controller_instances = {}
-    _get_lists = ["laser1:ctl:wavelength-act", "laser1:scan:end","laser1:scan:frequency","laser1:scan:offset"]
-    USER_ACCESS = [
-        "set_laser","get_laser","off"
-    ]
     SUB_CONNECTION_CHANGE = "connection_change"
 
     def __init__(
@@ -144,13 +140,10 @@ class ITCController(OphydObject): #On off laser similar to controller
         # self._connected = False
         print(f"connecting to {self.host}")
         logger.info("The connection has already been established.")
-        self.ITC = MercuryITC(f'TCPIP0:{self.host}:7020:SOCKET')
-        self.htr = self.ITC.modules[0] #main htr
-        self.htr.nick = "Main Heater"
-        self.temp = self.ITC.modules[1]
-        self.temp.nick = "Temperature sensor"
-        self.aux = self.ITC.modules[2]
-        self.aux.nick = "Gas flow"
+        self.ITC = MercuryITC(f"TCPIP0::{self.host}::7020::SOCKET")
+        self.htr = self.ITC.modules[1] #main htr
+        self.temp = self.ITC.modules[2]
+        self.aux = self.ITC.modules[0]
         self._connected = True
         # self._set_default_values()
         self.name = "MercuryITC"
@@ -185,31 +178,31 @@ class ITCController(OphydObject): #On off laser similar to controller
             # "wide scan amplitude":{"value": self.ITC.laser1.wide_scan.amplitude.get()},
             # "wide scan offset":{"value": self.ITC.laser1.wide_scan.offset.get()},
             # "wide scan remaining time":{"value": self.ITC.laser1.wide_scan.remaining_time.get()},
-            "Main heater volt":{"value": self.htr.volt()},
-            "Main heater current RO":{"value": self.htr.curr()},
-            "Main heater power":{"value": self.heater_power()},#
-            "Main heater voltage limit":{"value": self.htr.vlim()},
-            "Temperature sensor volt RO":{"value": self.temp.volt()},
-            "Temperature sensor excitation magnitude":{"value": self.temp.exct_mag()},
-            "Temperature sensor scaling factor":{"value": self.temp.cal_scal()},
-            "Temperature sensor offset":{"value": self.temp.cal_offs()},
-            "Temperature sensor hot limit":{"value": self.temp.cal_hotl()},
-            "Temperature sensor cold limit":{"value": self.temp.cal_coldl()},
-            "Temperature sensor temperature":{"value": self.temp.temp()},#
-            "Temperature sensor sensitivity":{"value": self.temp.slop()},
-            "Temperature sensor associate heater":{"value": self.temp.loop_temp()},
-            "Temperature sensor associate auxiliary":{"value": self.temp.loop_aux()},
-            "Temperature sensor propotional gain":{"value": self.temp.loop_p()},
-            "Temperature sensor internal gain":{"value": self.temp.loop_i()},
-            "Temperature sensor differential gain":{"value": self.temp.loop_d()},
-            "Temperature sensor Enables or disables automatic gas flow":{"value": self.temp.loop_faut()},
-            "Temperature sensor ramp speed in K/min":{"value": self.temp.loop_rset()},
-            "Temperature sensor Enables or disables temperature ramp":{"value": self.temp.loop_rena()},
-            "Gas flow minimum flow":{"value": self.aux.gmin()},
-            "Gas flow Temperature error sensitivity":{"value": self.aux.tes()},
-            "Gas flow Temperature voltage error sensitivity":{"value": self.aux.tves()},
-            "Gas flow stepper speed":{"value": self.aux.spd()},
-            "Gas flow position stepper motor":{"value": self.aux.step()},
+            "Main heater volt":{"value": self.htr.volt},
+            "Main heater current RO":{"value": self.htr.curr},
+            "Main heater power":{"value": self.heater_power},#
+            "Main heater voltage limit":{"value": self.htr.vlim},
+            "Temperature sensor volt RO":{"value": self.temp.volt},
+            "Temperature sensor excitation magnitude":{"value": self.temp.exct_mag},
+            "Temperature sensor scaling factor":{"value": self.temp.cal_scal},
+            "Temperature sensor offset":{"value": self.temp.cal_offs},
+            "Temperature sensor hot limit":{"value": self.temp.cal_hotl},
+            "Temperature sensor cold limit":{"value": self.temp.cal_coldl},
+            "Temperature sensor temperature":{"value": self.temp.temp},#
+            "Temperature sensor sensitivity":{"value": self.temp.slop},
+            "Temperature sensor associate heater":{"value": self.temp.loop_temp},
+            "Temperature sensor associate auxiliary":{"value": self.temp.loop_aux},
+            "Temperature sensor propotional gain":{"value": self.temp.loop_p},
+            "Temperature sensor internal gain":{"value": self.temp.loop_i},
+            "Temperature sensor differential gain":{"value": self.temp.loop_d},
+            "Temperature sensor Enables or disables automatic gas flow":{"value": self.temp.loop_faut},
+            "Temperature sensor ramp speed in K/min":{"value": self.temp.loop_rset},
+            "Temperature sensor Enables or disables temperature ramp":{"value": self.temp.loop_rena},
+            "Gas flow minimum flow":{"value": self.aux.gmin},
+            "Gas flow Temperature error sensitivity":{"value": self.aux.tes},
+            "Gas flow Temperature voltage error sensitivity":{"value": self.aux.tves},
+            "Gas flow stepper speed":{"value": self.aux.spd},
+            "Gas flow position stepper motor":{"value": self.aux.step},
 
 
         }
@@ -217,7 +210,7 @@ class ITCController(OphydObject): #On off laser similar to controller
 
     def heater_power(self):
         logger.debug(f"recv heater power")
-        return self.htr.powr()
+        return self.htr.powr
 
     # @scan_end.setter
     def heater_power_setter(self,val):
@@ -225,7 +218,7 @@ class ITCController(OphydObject): #On off laser similar to controller
         self.htr.powr(val)
     def temperature(self):
         logger.debug(f"recv temperature")
-        return self.temp.temp()
+        return self.temp.temp[0]
 
     # @scan_start.setter
     def temperature_setter(self,val):
@@ -262,7 +255,7 @@ class ITCSignalBase(abc.ABC,Signal): #Similar to socketsignal
     def __init__(self, signal_name, **kwargs):
         self.signal_name = signal_name
         super().__init__(**kwargs)
-        self.ITC = self.parent.ITCController
+        self.ITC = self.parent.itccontroller
 
     @abc.abstractmethod
     def _get(self):
@@ -335,8 +328,8 @@ class MercuryITCDevice(Device):
     # widescan_amplitude = Cpt(ITCWideScanAmplitude, signal_name="widescan_amplitude")
     # widescan_offset = Cpt(ITCWideScanOffset, signal_name="widescan_offset")
     # widescan_time = Cpt(ITCWideScanRemainingTime, signal_name="widescan_remaining_time")
-    scan_end = Cpt(ITCHeaterPower, signal_name="scan_end",kind="hinted")
-    scan_start = Cpt(ITCTemperature, signal_name="scan_start",kind="hinted")
+    heater_power = Cpt(ITCHeaterPower, signal_name="heater_power",kind="hinted")
+    temperature = Cpt(ITCTemperature, signal_name="temperature", kind="hinted")
 
     def __init__(self, prefix,name, host, port=None, kind=None,configuration_attrs=None, parent=None,**kwargs):
         self.itccontroller = ITCController(host=host,port=port)
