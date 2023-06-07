@@ -475,11 +475,11 @@ class LaserToptica(Device):
     def update_scan_start(self,val):
         self.scan_start.put(val)
     def update_scan_offset(self,val):
-        return self.scan_offset.get()
+        self.scan_offset.put(val)
     def update_scan_offset(self,val):
-        return self.scan_frequency.get()
+        self.scan_frequency.put(val)
     def update_ctl_wavelength_act(self,val):
-        return self.ctl_wavelength_act.put(val)
+        self.ctl_wavelength_act.put(val)
     # def report_widescan_amplitude(self,val):
     #     return self.widescan_amplitude.get()
     # def report_widescan_offset(self,val):
@@ -494,7 +494,7 @@ class LaserToptica(Device):
         return self.scan_offset.get()
     def report_scan_frequency(self):
         return self.scan_frequency.get()
-    def report_ctl_wavelength_act(elf):
+    def report_ctl_wavelength_act(self):
         return self.ctl_wavelength_act.get()
 
     def stage(self) -> List[object]:
