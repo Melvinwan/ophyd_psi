@@ -34,7 +34,7 @@ class MultiSequenceProgram(AveragerProgram):
         for ch in out_chs: #[0,1]
             #READOUT AT CHANNEL 0 and 1
             self.declare_readout(ch=ch, length=self.cfg["readout_length"],
-                                 freq=self.cfg["pulse_freq"])
+                                 freq=self.cfg["EOM"]["pulse_freq"])
 
         idata = 30000*np.ones(16*cfg["EOM"]["length"])
 #         qdata = 30000*np.ones(16*cfg["length"])
@@ -46,7 +46,7 @@ class MultiSequenceProgram(AveragerProgram):
             self.add_pulse(ch=ch, name="measure", idata=idata)
 #             self.add_pulse(ch=ch, name="measure", idata=idata,qdata=qdata)
 
-        freq=soccfg.freq2reg(cfg["pulse_freq"])  # convert frequency to dac frequency
+        freq=soccfg.freq2reg(cfg["EOM"]["pulse_freq"])  # convert frequency to dac frequency
 #         self.trigger(pins=[0], t=0) # send a pulse on pmod0_0, for scope trigger
         for ii, ch in enumerate(self.cfg["EOM"]['out_ch']):
             #PULSE REGISTER AT CHANNEL 0 and 1
