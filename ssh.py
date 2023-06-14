@@ -19,21 +19,62 @@ class SSH:
         self.client.connect(self.hostname, self.port, self.username, self.password)
 
     def run_code(self,path_filename):
-        # Command to execute on the remote server
-        command = 'python '+path_filename+'.py'
+        # Create a new SSH session using "sudo -i" command
+        # Invoke an interactive shell session
+        shell = self.client.invoke_shell()
 
-        # Execute the command
-        stdin, stdout, stderr = self.client.exec_command(command)
+        # Send the "sudo -i" command to start a root shell
+        shell.send('sudo -i\n')
 
-        # Get the output and error messages (if any)
-        output = stdout.read().decode()
-        errors = stderr.read().decode()
+        # Wait for the login process to complete
+        import time
+        time.sleep(1)  # Adjust the delay as needed
+        output = shell.recv(65535).decode('utf-8')
+        while 'password' in output.lower():
+            password = 'xilinx\n'
+            shell.send(password)
+            time.sleep(1)  # Adjust the delay as needed
+            output = shell.recv(65535).decode('utf-8')
 
-        # Print the output and errors
-        print('Output:')
+        shell.send(f'source /etc/profile.d/pynq_venv.sh\n')
+
+        # Wait for the command execution to complete
+        time.sleep(1)  # Adjust the delay as needed
+        output = shell.recv(65535).decode('utf-8')
+
+        # Print the command output
         print(output)
-        print('Errors:')
-        print(errors)
+
+        shell.send("cd /home/xilinx/jupyter_notebooks/qick/qick_demos\n")
+
+        # Wait for the command execution to complete
+        time.sleep(1)  # Adjust the delay as needed
+        output = shell.recv(65535).decode('utf-8')
+
+        # Print the command output
+        print(output)
+
+        shell.send("ls\n")
+
+        # Wait for the command execution to complete
+        time.sleep(1)  # Adjust the delay as needed
+        output = shell.recv(65535).decode('utf-8')
+
+        # Print the command output
+        print(output)
+
+        # Execute commands with administrative privileges
+        command = 'python '+path_filename+'.py'
+        shell.send(f'{command}\n')
+
+        # Wait for the command execution to complete
+        time.sleep(10)  # Adjust the delay as needed
+        output = shell.recv(65535).decode('utf-8')
+
+        # Print the command output
+        print(output)
+
+        shell.close()
 
     def transfer_file(self,path_target_file,path_remote_file):
         # Open an SFTP session
