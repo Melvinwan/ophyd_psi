@@ -45,16 +45,7 @@ class SSH:
         # Print the command output
         print(output)
 
-        shell.send("cd /home/xilinx/jupyter_notebooks/qick/qick_demos\n")
-
-        # Wait for the command execution to complete
-        time.sleep(1)  # Adjust the delay as needed
-        output = shell.recv(65535).decode('utf-8')
-
-        # Print the command output
-        print(output)
-
-        shell.send("ls\n")
+        shell.send("cd /home/xilinx/jupyter_notebooks/qick/qick_demos/ssh_control\n")
 
         # Wait for the command execution to complete
         time.sleep(1)  # Adjust the delay as needed
