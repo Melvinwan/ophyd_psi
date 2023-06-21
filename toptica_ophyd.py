@@ -159,14 +159,11 @@ class LaserController(OphydObject): #On off laser similar to controller
         self.is_open = True
 
     def _set_default_values(self):
-        # no. of axes controlled by each controller
         self._wavelength_act = 1550
         self._scan_end = 75
         self._scan_start = 50
         self._scan_freq = 10
         self._scan_offset = 70
-        # self._wide_scan_amplitude = 120
-        # self._wide_scan_offset = 1570
 
     @property
     def connected(self):
@@ -181,17 +178,6 @@ class LaserController(OphydObject): #On off laser similar to controller
     #     self.connect()
     #     self.is_open = True
 
-    # def start_wide_scan(self):
-    #     if not self.connected:
-    #         print("The connection has not been established")
-    #     else:
-    #         self.dlc.laser1.wide_scan.start.exec()
-    # def stop_wide_scan(self):
-    #     if not self.connected:
-    #         print("The connection has not been established")
-    #     else:
-    #         self.dlc.laser1.wide_scan.stop.exec()
-
 
     def off(self):
         """Close the connection to the laser"""
@@ -201,9 +187,6 @@ class LaserController(OphydObject): #On off laser similar to controller
 
     def get_laser_data(self):
         signals = {
-            # "wide scan amplitude":{"value": self.dlc.laser1.wide_scan.amplitude.get()},
-            # "wide scan offset":{"value": self.dlc.laser1.wide_scan.offset.get()},
-            # "wide scan remaining time":{"value": self.dlc.laser1.wide_scan.remaining_time.get()},
             "main scan end":{"value": self.dlc.laser1.scan.end.get()},
             "main scan start":{"value": self.dlc.laser1.scan.start.get()},
             "main scan frequency":{"value": self.dlc.laser1.scan.frequency.get()},
@@ -211,23 +194,6 @@ class LaserController(OphydObject): #On off laser similar to controller
             "ctl wavelength":{"value":self.dlc.laser1.ctl.wavelength_act.get()}
         }
         return signals
-
-    # def widescan_amplitude(self):
-    #     return self.dlc.laser1.wide_scan.amplitude.get()
-
-    # # @widescan_amplitude.setter
-    # def widescan_amplitude_setter(self,val):
-    #     self.dlc.laser1.wide_scan.amplitude.set(val)
-
-    # def widescan_offset(self):
-    #     return self.dlc.laser1.wide_scan.offset.get()
-
-    # # @widescan_offset.setter
-    # def widescan_offset_setter(self,val):
-    #     self.dlc.laser1.wide_scan.offset.set(val)
-
-    # def widescan_remaining_time(self):
-    #     return self.dlc.laser1.wide_scan.remaining_time.get()
 
     def scan_end(self):
         logger.debug(f"recv scan end")
@@ -299,16 +265,6 @@ class LaserController(OphydObject): #On off laser similar to controller
                 )
         print(t)
 
-    # def __new__(cls, *args, **kwargs):
-    #     socket = kwargs.get("socket")
-    #     if not hasattr(socket, "host"):
-    #         raise RuntimeError("Socket must specify a host.")
-    #     if not hasattr(socket, "port"):
-    #         raise RuntimeError("Socket must specify a port.")
-    #     host_port = f"{socket.host}:{socket.port}"
-    #     if host_port not in Controller._controller_instances:
-    #         Controller._controller_instances[host_port] = object.__new__(cls)
-    #     return Controller._controller_instances[host_port]
 class LaserSignalBase(abc.ABC,Signal): #Similar to socketsignal
     SUB_SETPOINT = "setpoint"
     def __init__(self, signal_name, **kwargs):
@@ -350,10 +306,6 @@ class LaserSignalBase(abc.ABC,Signal): #Similar to socketsignal
             }
         }
 
-    # def get_laser(self, item):
-    #     """Get motor instance for a specified controller axis."""
-    #     return self._client.get(item)
-
 class LaserSignalRO(LaserSignalBase):
     def __init__(self, signal_name, **kwargs):
         super().__init__(signal_name, **kwargs)
@@ -362,29 +314,6 @@ class LaserSignalRO(LaserSignalBase):
     # @threadlocked
     def _set(self):
         raise ReadOnlyError("Read-only signals cannot be set")
-
-# class LaserWideScanAmplitude(LaserSignalBase):
-#     # @threadlocked
-#     def _get(self):
-#         return self.dlc.widescan_amplitude()
-
-#     # @threadlocked
-#     def _set(self, val):
-#         self.dlc.widescan_amplitude_setter(val)
-
-# class LaserWideScanOffset(LaserSignalBase):
-#     # @threadlocked
-#     def _get(self):
-#         return self.dlc.widescan_offset()
-
-#     # @threadlocked
-#     def _set(self, val):
-#         self.dlc.widescan_offset_setter(val)
-
-# class LaserWideScanRemainingTime(LaserSignalRO):
-#     # @threadlocked
-#     def _get(self):
-#         return self.dlc.widescan_remaining_time()
 
 class LaserMainScanEnd(LaserSignalBase):
     # @threadlocked
@@ -466,12 +395,6 @@ class LaserToptica(Device):
         self.scan_frequency.kind = "hinted"
         self.ctl_wavelength_act.kind = "hinted"
 
-    # def update_widescan_amplitude(self,val):
-    #     self.widescan_amplitude.put(val)
-    # def update_widescan_offset(self,val):
-    #     self.widescan_offset.put(val)
-    # def update_widescan_time(self,val):
-    #     self.widescan_time.put(val)
     def limit_wavelength(self):
         return self.low_limit_wavelength.get()
     def update_scan_end(self,val):
@@ -484,12 +407,6 @@ class LaserToptica(Device):
         self.scan_frequency.put(val)
     def update_ctl_wavelength_act(self,val):
         self.ctl_wavelength_act.put(val)
-    # def report_widescan_amplitude(self,val):
-    #     return self.widescan_amplitude.get()
-    # def report_widescan_offset(self,val):
-    #     return self.widescan_offset.get()
-    # def report_widescan_time(self,val):
-    #     return self.widescan_time.get()
     def report_scan_end(self):
         return self.scan_end.get()
     def report_scan_start(self):
