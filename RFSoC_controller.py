@@ -8,7 +8,7 @@ from create_json import import_json_file, save_list_to_json_file
 
 class RFSoC_controller:
     def __init__(self, host="129.129.131.153", username="xilinx", password="xilinx", config_host=None):
-        if config_host!=None:
+        if config_host==None:
             self.host = host
             self.username = username
             self.password = password
@@ -182,6 +182,6 @@ dict_to_xml_file(config, "xilinx.xml")
         return "Configuration set successfully"
 
 
-config_host = xml_config_to_dict("xilinx_host.xml")["database"]
-test = RFSoC_controller(config_host=config_host)
-test.run_code()
+# config_host = xml_config_to_dict("xilinx_host.xml")["database"]
+# test = RFSoC_controller(config_host=config_host)
+# test.run_code()
