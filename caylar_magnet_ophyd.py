@@ -299,10 +299,14 @@ class CaylarMagnet(Device):
         socket_cls=SocketIO,
         device_manager=None,
         limits=None,
+        config_host=None,
         **kwargs,
     ):
         self.sign = sign
-        self.controller = MagneticController(socket=socket_cls(host=host, port=port))
+        if config_host==None:
+            self.controller = MagneticController(socket=socket_cls(host=host, port=port))
+        else:
+            self.controller = MagneticController(socket=socket_cls(host=config_host["host"], port=config_host["port"]))
         self.controller.on()
         self.device_manager = device_manager
         super().__init__(

@@ -128,17 +128,21 @@ class LaserController(OphydObject): #On off laser similar to controller
         port=None,
         attr_name="",
         parent=None,
-        labels=None,
+        labels=None,config_host=None,
         kind=None,
     ):
         if not hasattr(self, "_initialized"):
             super().__init__(
-                name=name, attr_name=attr_name, parent=parent, labels=labels, kind=kind
+                name=name, attr_name=attr_name, parent=parent, labels=labels, kind=kind,
             )
 
             self._lock = threading.RLock()
-            self.host = host
-            self.port = port
+            if config_host == None:
+                self.host = host
+                self.port = port
+            else:
+                self.host = config_host["host"]
+                self.port = config_host["port"]
             self._initialized = True
             self._initialize()
 

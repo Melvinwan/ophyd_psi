@@ -118,7 +118,7 @@ class ITCController(OphydObject): #On off laser similar to controller
         self,
         *,
         name=None,
-        host=None,
+        host="itc-optistat.psi.ch",
         port=None,
         attr_name="",
         parent=None,
@@ -331,8 +331,11 @@ class MercuryITCDevice(Device):
     heater_power = Cpt(ITCHeaterPower, signal_name="heater_power",kind="hinted")
     temperature = Cpt(ITCTemperature, signal_name="temperature", kind="hinted")
 
-    def __init__(self, prefix,name, host, port=None, kind=None,configuration_attrs=None, parent=None,**kwargs):
-        self.itccontroller = ITCController(host=host,port=port)
+    def __init__(self, prefix,name, host, port=None, kind=None,configuration_attrs=None, parent=None,config_host=None,**kwargs):
+        if config_host==None:
+            self.itccontroller = ITCController(host=host,port=port)
+        else:
+            self.itccontroller = ITCController(host=config_host["host"],port=config_host["port"])
         super().__init__(
             prefix=prefix,
             name=name,
@@ -365,7 +368,7 @@ class MercuryITCDevice(Device):
 
 
 if __name__ == "__main__":
-    ITCD = MercuryITCDevice(prefix="...",name="ITCD", host="129.129.98.110")
+    ITCD = MercuryITCDevice(prefix="...",name="ITCD", host="itc-optistat.psi.ch")
     ITCD.stage()
     print(ITCD.read())
 
