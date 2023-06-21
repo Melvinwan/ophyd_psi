@@ -26,29 +26,62 @@ def read_xml_config(filename):
         # Print the tag and value
         print(f"{tag}: {value}")
 
-def xml_to_dict(element):
-    # Create an empty dictionary
-    result = {}
+import ast
 
-    # Process attributes
+def xml_to_dict(element):
+    result = {}
     result.update(element.attrib)
 
-    # Process child elements
     for child in element:
         child_dict = xml_to_dict(child)
         if child.tag in result:
-            # If the tag already exists, convert it to a list
             if not isinstance(result[child.tag], list):
                 result[child.tag] = [result[child.tag]]
             result[child.tag].append(child_dict)
         else:
-            result[child.tag] = child_dict
+            if isinstance(child_dict, str) and child_dict.isdigit():
+                result[child.tag] = int(child_dict)
+            elif isinstance(child_dict, str) and is_float(child_dict):
+                result[child.tag] = float(child_dict)
+            elif isinstance(child_dict, str) and is_list(child_dict):
+                result[child.tag] = ast.literal_eval(child_dict)
+            elif isinstance(child_dict, list):
+                result[child.tag] = child_dict
+            else:
+                result[child.tag] = child_dict
 
     # Process text content
-    if element.text:
-        result['text'] = element.text.strip()
+    if element.text and element.text.strip():
+        text_content = element.text.strip()
+        if text_content.isdigit():
+            result = int(text_content)
+        elif is_float(text_content):
+            result = float(text_content)
+        else:
+            result = text_content
+
+    # Convert key to int if possible
+    if isinstance(result, dict):
+        for key, value in list(result.items()):
+            if isinstance(key, str) and key.isdigit():
+                result[int(key)] = result.pop(key)
 
     return result
+
+def is_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+def is_list(value):
+    try:
+        ast.literal_eval(value)
+        return isinstance(ast.literal_eval(value), list)
+    except (SyntaxError, ValueError):
+        return False
+
 
 def xml_config_to_dict(filename):
     tree = ET.parse(filename)
@@ -81,3 +114,25 @@ def add_value_to_xml(filename, parent_element, element_name, value=None,nested_e
 
     # Write the updated tree to the file
     tree.write(filename)
+
+def dict_to_xml(dictionary, parent):
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            element = ET.SubElement(parent, key)
+            dict_to_xml(value, element)
+        else:
+            element = ET.SubElement(parent, key)
+            element.text = str(value)
+
+def dict_to_xml_string(dictionary, root_element_name):
+    root = ET.Element(root_element_name)
+    dict_to_xml(dictionary, root)
+    xml_string = ET.tostring(root, encoding='utf-8', method='xml')
+    return xml_string
+
+def dict_to_xml_file(dictionary, file_name):
+    xml_string = dict_to_xml_string(dictionary, 'data')
+
+    # Save the XML to a file
+    with open(file_name, 'wb') as f:
+        f.write(xml_string)

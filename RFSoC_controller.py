@@ -4,11 +4,18 @@ from XMLGenerator import xml_config_to_dict, add_value_to_xml
 
 from create_json import import_json_file, save_list_to_json_file
 
+
+
 class RFSoC_controller:
-    def __init__(self, host="129.129.131.153", username="xilinx", password="xilinx"):
-        self.host = host
-        self.username = username
-        self.password = password
+    def __init__(self, host="129.129.131.153", username="xilinx", password="xilinx", config_host=None):
+        if config_host!=None:
+            self.host = host
+            self.username = username
+            self.password = password
+        else:
+            self.host = config_host["host"]
+            self.username = config_host["username"]
+            self.password = config_host["password"]
         self.RFSoC = SSH(host,username,password)
         self.try_connect()
 
@@ -107,8 +114,8 @@ config= {
 "AOM":configAOM
 }
 
-from create_json import import_json_file, save_list_to_json_file, create_json
-create_json(config)
+from XMLGenerator import dict_to_xml_file,xml_config_to_dict
+dict_to_xml_file(config, "xilinx.xml")
 '''
 
             # Open the file in write mode and write the content
@@ -117,7 +124,7 @@ create_json(config)
 
             self.RFSoC.transfer_file(r"config_file.py",r"/home/xilinx/jupyter_notebooks/qick/qick_demos/ssh_control/config_file.py")
             self.RFSoC.run_code("config_file")
-            self.RFSoC.download_file(r"/home/xilinx/jupyter_notebooks/qick/qick_demos/ssh_control/config.json",r"config.json")
+            self.RFSoC.download_file(r"/home/xilinx/jupyter_notebooks/qick/qick_demos/ssh_control/xilinx.xml",r"xilinx.xml")
 
     def run_code(self):
         self.build_config()
@@ -125,15 +132,15 @@ create_json(config)
         self.RFSoC.run_code("RFSoC")
 
     def get_config(self,print=False):
-        file_path = "config.json"  # Replace with the actual file path
+        file_path = "xilinx.xml"  # Replace with the actual file path
 
         if not os.path.exists(file_path):
             try:
-                self.RFSoC.download_file(r"/home/xilinx/jupyter_notebooks/qick/qick_demos/ssh_control/config.json",r"config.json")
+                self.RFSoC.download_file(r"/home/xilinx/jupyter_notebooks/qick/qick_demos/ssh_control/config.xml",r"config.xml")
             except Exception as e:
                 return False
         try:
-            self.config = import_json_file("config.json")
+            self.config = xml_config_to_dict(file_path)
             if print:
                 print(self.config)
                 return True
@@ -174,5 +181,7 @@ create_json(config)
                 print(f"An error occurred: {str(e)}")
         return "Configuration set successfully"
 
-test = RFSoC_controller()
-# test.run_code()
+
+config_host = xml_config_to_dict("xilinx_host.xml")["database"]
+test = RFSoC_controller(config_host=config_host)
+test.run_code()
