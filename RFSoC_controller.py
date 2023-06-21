@@ -1,5 +1,6 @@
 from ssh import SSH
 import os
+from XMLGenerator import xml_config_to_dict, add_value_to_xml
 
 from create_json import import_json_file, save_list_to_json_file
 
@@ -9,7 +10,16 @@ class RFSoC_controller:
         self.username = username
         self.password = password
         self.RFSoC = SSH(host,username,password)
-        self.RFSoC.connect()
+        self.try_connect()
+
+    def try_connect(self):
+        try:
+            print("Connection was established")
+            self.RFSoC.connect()
+            return True
+        except:
+            print("Connection cannot be established")
+            return False
 
     def disconnect(self):
         self.RFSoC.disconnect()
@@ -165,4 +175,4 @@ create_json(config)
         return "Configuration set successfully"
 
 test = RFSoC_controller()
-test.run_code()
+# test.run_code()
